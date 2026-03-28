@@ -19,6 +19,7 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Color
+import android.graphics.Matrix
 import android.graphics.Paint
 import android.graphics.Path
 import android.graphics.PorterDuff
@@ -46,6 +47,7 @@ class WhiteboardView : View {
     var isStylusOnlyMode: Boolean = false
 
     private val currentPath = Path()
+    private val currentMatrix = Matrix()
     private val currentPaint =
         Paint().apply {
             isAntiAlias = true
@@ -89,6 +91,10 @@ class WhiteboardView : View {
     ) {
         super.onSizeChanged(w, h, oldw, oldh)
         if (::bufferBitmap.isInitialized) bufferBitmap.recycle()
+        currentMatrix.setScale(w.toFloat() / oldw, h.toFloat() / oldh)
+        history.forEach {
+            it.path.transform(currentMatrix)
+        }
         bufferBitmap = createBitmap(w, h)
         bufferCanvas = Canvas(bufferBitmap)
         redrawHistory()
