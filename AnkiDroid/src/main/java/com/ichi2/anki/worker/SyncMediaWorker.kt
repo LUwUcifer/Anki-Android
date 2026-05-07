@@ -16,7 +16,9 @@
 package com.ichi2.anki.worker
 
 import android.app.Notification
+import android.app.PendingIntent
 import android.content.Context
+import android.content.Intent
 import android.content.pm.ServiceInfo
 import android.os.Build
 import androidx.core.app.NotificationCompat
@@ -40,6 +42,7 @@ import com.ichi2.anki.CollectionManager
 import com.ichi2.anki.R
 import com.ichi2.anki.cancelMediaSync
 import com.ichi2.anki.notifications.NotificationId
+import com.ichi2.anki.receiver.CopyToClipboardReceiver
 import com.ichi2.anki.utils.ext.trySetForeground
 import com.ichi2.utils.Permissions
 import kotlinx.coroutines.CancellationException
@@ -99,6 +102,11 @@ class SyncMediaWorker(
                             .BigTextStyle()
                             .bigText(message),
                     )
+                    addAction(
+                        R.drawable.baseline_content_copy_24,
+                        CollectionManager.TR.qtMiscCopyToClipboard(),
+                        getCopyToClipboardIntent(message),
+                    )
                 }
             }
             Timber.d("SyncMediaWorker: showing failure notification")
@@ -148,6 +156,19 @@ class SyncMediaWorker(
         } else {
             ForegroundInfo(NotificationId.SYNC_MEDIA, notification)
         }
+    }
+
+    private fun getCopyToClipboardIntent(text: String): PendingIntent {
+        val intent = Intent(applicationContext, CopyToClipboardReceiver::class.java)
+        intent.apply {
+            putExtra(CopyToClipboardReceiver.SYNC_ERROR_LOG, text)
+        }
+        return PendingIntent.getBroadcast(
+            applicationContext,
+            0,
+            intent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
+        )
     }
 
     private fun notify(notification: Notification) = notificationManager?.notify(NotificationId.SYNC_MEDIA, notification)
